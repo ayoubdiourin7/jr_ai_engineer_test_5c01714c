@@ -48,7 +48,7 @@ Dataset: `data/customers.csv` (synthetic, provided — ~5,000 rows, churn label 
 
 **Starter code:** `train_churn.py` — intentionally has one bug (a silent data leak from train/test split done in the wrong order). Find it and fix it. Don't just rewrite the file from scratch with an LLM; the debrief will ask you to point to the exact line and explain why it mattered.
 
-### Part A Implementation Notes
+## Part A Implementation Notes
 
 I dropped `days_since_last_cancellation_request` because it is a leaky feature. In this dataset, `-1` means the customer did not make a cancellation request, while non-negative values are strongly tied to customers who churned. That gives the model information that is too close to the answer. The model can learn to predict churn based on it, which is not available at prediction time.
 
@@ -71,6 +71,10 @@ Requirements:
 - One paragraph in the README: how would you evaluate this classifier's accuracy at scale without hand-labeling thousands of tickets?
 
 We are explicitly testing whether you understand that LLM output is unreliable by default and needs to be engineered around, not whether you can write a clever prompt.
+
+## Part B Notes
+
+To evaluate this classifier at scale without any hand-labeling, I would run human spot-checks on a small random sample (in the order of 150 tickets ) to estimate ground-truth accuracy with confidence intervals. This is enough to benchmark different LLM providers or prompt versions. Over time, I would collect implicit feedback: when a human agent manually re-categorizes a ticket, I log that correction as a label. This builds a labeled dataset organically without ever asking anyone to label tickets just for evaluation.
 
 ---
 
