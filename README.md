@@ -99,6 +99,36 @@ Answer in your README, ~150–250 words each. We want your actual reasoning, not
 2. What's the difference between monitoring a classic ML model in production and monitoring an LLM-based feature? Name one metric specific to each that the other doesn't need.
 3. Your model.pkl from Part A was trained on data up to today. In 3 months you'll retrain. What needs to be versioned besides the model file itself, and why does it matter if you skip it?
 
+## Part D Notes
+
+### 1. Detecting and Diagnosing Model Degradation
+
+I would monitor two things.
+
+First, I would compare production feature distributions with the training data every week. Large changes in features such as `monthly_charge`, `tenure_months`, `support_tickets`, `age`, or `contract_type` could indicate data drift.
+
+Second, once true churn labels become available, I would compare predicted probabilities with actual churn outcomes.
+
+To diagnose the cause, I would first check the data pipeline. I would verify that preprocessing, feature names, data types, missing-value handling, and encoding are still the same as during training. Then, I would check whether customer behavior has changed.
+
+### 2. Monitoring Classic ML vs. an LLM
+
+A classic ML model produces a fixed output, such as a churn probability. Its performance depends on production data remaining similar to the training data. I would monitor feature drift, prediction distributions, and model performance when labels become available.
+
+An LLM generates text, so I would also monitor whether its response makes sense (no hallucination), follows instructions, and respects the expected format.
+
+A classic ML-specific metric is **feature drift**, such as changes in the distributions of `monthly_charge` or `support_tickets`.
+
+An LLM-specific metric is **malformed response rate**, for example the percentage of outputs that do not follow the required JSON schema. The churn model does not need this metric because it always returns a numeric probability.
+
+### 3. What to Version Besides `model.pkl`
+
+I would version everything needed to reproduce the training process.
+
+This includes the exact training data snapshot, the training and preprocessing code, the Git commit hash, the feature list, model parameters, random seed, evaluation results, and exact dependency versions in `requirements.txt`.
+
+This matters because data, code, and libraries can change over time. Without these versions, I may not be able to reproduce the same model, compare retraining results fairly, understand why performance changed.
+
 ---
 
 ## Part E — Business framing (written, no code required)
