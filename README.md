@@ -4,6 +4,7 @@
 **AI tools:** Allowed and expected. Use Claude, Copilot, ChatGPT, whatever you normally use. You will be asked to explain and extend your own code live, without AI assistance, in the debrief — so don't submit anything you can't defend.
 
 **Submission:**
+
 1. Clone the repo we sent you (a copy of this template, unique to you).
 2. Commit and push your work directly to it as you go — don't submit one giant commit.
 3. Your code, `README.md` decisions, and the written answers from Part D and E should all be committed there — **no zip files**, we want to see your commit history.
@@ -39,12 +40,22 @@ You'll build a small, real, working slice of both.
 Dataset: `data/customers.csv` (synthetic, provided — ~5,000 rows, churn label included, deliberately a bit messy: missing values, one leaky column, one mislabeled dtype, mild class imbalance).
 
 **Task:**
+
 1. EDA — identify and document the data quality issues (yes, including the leaky column — tell us why it's leaky, don't just drop it silently).
 2. Build a churn classifier. Any classical approach is fine (logistic regression, gradient boosting, etc.) — we're not grading algorithm choice, we're grading whether your reasoning for the choice holds up.
 3. Evaluate properly: pick a metric appropriate to the class balance, justify it in the README, report it on a held-out set.
 4. Serialize the trained model (`model.pkl` or equivalent) so it can be loaded by Part C.
 
 **Starter code:** `train_churn.py` — intentionally has one bug (a silent data leak from train/test split done in the wrong order). Find it and fix it. Don't just rewrite the file from scratch with an LLM; the debrief will ask you to point to the exact line and explain why it mattered.
+
+### Part A Implementation Notes
+
+I dropped `days_since_last_cancellation_request` because it is a leaky feature. In this dataset, `-1` means the customer did not make a cancellation request, while non-negative values are strongly tied to customers who churned. That gives the model information that is too close to the answer. The model can learn to predict churn based on it, which is not available at prediction time.
+
+I also fixed the order of preprocessing. I changed the order to split first, then calculate missing-value medians based only on the training split and propagate those same median values to the test split. I also fit the scaler only on the training data. The test set is only transformed using values learned from the training set.
+
+The classes are about 66% non-churned and 34% churned, so accuracy is misleading because a majority-class predictor can already get about 66% accuracy.
+I report ROC-AUC as the primary metric because the retention team would use ranked churn probabilities to decide which customers to contact first. I also report churn-class precision and recall because missing a likely churner is more costly than sending an unneeded retention offer.
 
 ---
 
@@ -53,6 +64,7 @@ Dataset: `data/customers.csv` (synthetic, provided — ~5,000 rows, churn label 
 **Task:** Build a ticket-classification pipeline that calls an LLM (use any provider; a mock/stub client is provided if you don't have API keys — `llm_client_stub.py`) to classify a support ticket into one of: `billing`, `shipping`, `technical`, `account`, `other`.
 
 Requirements:
+
 - Structured output (JSON) parsed reliably — handle the case where the model returns malformed JSON or an invalid category. Don't let one bad response crash the pipeline.
 - A documented prompt (system + user template) in your repo, not just inline.
 - At least 5 hand-written test cases (`tests/test_classifier.py`), including one adversarial/edge case (e.g. a ticket that plausibly fits two categories, or is empty).
@@ -79,7 +91,7 @@ We're not expecting production-grade infra here — no Kubernetes, no CI pipelin
 
 Answer in your README, ~150–250 words each. We want your actual reasoning, not textbook definitions.
 
-1. Three months after deploying the churn model, prediction quality has quietly degraded. Walk through how you'd detect that this happened, and what you'd check first to diagnose *why*.
+1. Three months after deploying the churn model, prediction quality has quietly degraded. Walk through how you'd detect that this happened, and what you'd check first to diagnose _why_.
 2. What's the difference between monitoring a classic ML model in production and monitoring an LLM-based feature? Name one metric specific to each that the other doesn't need.
 3. Your model.pkl from Part A was trained on data up to today. In 3 months you'll retrain. What needs to be versioned besides the model file itself, and why does it matter if you skip it?
 
@@ -87,9 +99,10 @@ Answer in your README, ~150–250 words each. We want your actual reasoning, not
 
 ## Part E — Business framing (written, no code required)
 
-The support team lead tells you: *"Just have the AI answer the tickets automatically, we don't need a human at all."*
+The support team lead tells you: _"Just have the AI answer the tickets automatically, we don't need a human at all."_
 
 Write a half-page response (in the README) covering:
+
 - What you'd actually recommend building first, and why it's not full automation on day one.
 - One success metric you'd propose to the business (not a model metric — a business one), and how you'd measure it.
 - One concrete failure mode of full automation here, and what it would cost the company if it went wrong.
@@ -107,7 +120,7 @@ This is graded on business judgment and communication to a non-technical stakeho
 ## What we ARE grading
 
 - Can you spot and explain bugs/leaks in code you didn't write.
-- Do you understand *why* your evaluation approach is right for this data, not just how to call `.fit()`.
+- Do you understand _why_ your evaluation approach is right for this data, not just how to call `.fit()`.
 - Do you treat LLM output as unreliable and defensively engineer around it.
 - Can you translate a technical decision into a sentence a support team lead would accept.
 - In the live debrief: is the reasoning actually yours.
