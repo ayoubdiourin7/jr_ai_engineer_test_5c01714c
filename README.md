@@ -48,7 +48,7 @@ Dataset: `data/customers.csv` (synthetic, provided — ~5,000 rows, churn label 
 
 **Starter code:** `train_churn.py` — intentionally has one bug (a silent data leak from train/test split done in the wrong order). Find it and fix it. Don't just rewrite the file from scratch with an LLM; the debrief will ask you to point to the exact line and explain why it mattered.
 
-## Part A Implementation Notes
+## Part A Notes
 
 I dropped `days_since_last_cancellation_request` because it is a leaky feature. In this dataset, `-1` means the customer did not make a cancellation request, while non-negative values are strongly tied to customers who churned. That gives the model information that is too close to the answer. The model can learn to predict churn based on it, which is not available at prediction time.
 
@@ -88,6 +88,10 @@ To evaluate this classifier at scale without any hand-labeling, I would run huma
 - One test hitting the endpoint (unit or integration, your call).
 
 We're not expecting production-grade infra here — no Kubernetes, no CI pipeline required for the take-home. We're checking: does it run, does it fail gracefully, can you containerize something correctly.
+
+## Part C Notes
+
+The Dockerfile had two issues. First, it used `pip install requirements.txt` instead of `pip install -r requirements.txt`, so dependencies were not installed from the requirements file. Second, the container command pointed Uvicorn to `main:app`, but the starter project did not include a `main.py` FastAPI app yet. I added `main.py` with the FastAPI application and `/predict` endpoint, so the Docker command now has a valid app target to run.
 
 ---
 
